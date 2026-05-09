@@ -100,7 +100,7 @@ const Scoreboard: React.FC = () => {
               <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-5 md:p-7">
                 {/* Round header */}
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="font-heading text-white/12 text-5xl leading-none select-none">{score.roundNumber}</span>
+                  <span className="font-heading text-white/[0.12] text-5xl leading-none select-none">{score.roundNumber}</span>
                   <div>
                     <div className="font-heading text-white/35 text-[10px] uppercase tracking-widest">Round</div>
                     <div className="font-heading text-white text-lg md:text-xl font-semibold">{score.round}</div>

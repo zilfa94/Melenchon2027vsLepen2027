@@ -9,6 +9,7 @@ const LS_KEY = 'duel2027_vote'
 
 interface Counts { lfi: number; rn: number }
 type VoteState = 'idle' | 'loading' | 'voted' | 'error'
+type LoadingFor = 'lfi' | 'rn' | null
 
 const pct = (val: number, total: number) =>
   total === 0 ? 50 : Math.round((val / total) * 100)
@@ -21,6 +22,7 @@ const PollSection: React.FC = () => {
   const [counts, setCounts]     = useState<Counts>({ lfi: 0, rn: 0 })
   const [voteState, setVote]    = useState<VoteState>('idle')
   const [votedFor, setVotedFor] = useState<'lfi' | 'rn' | null>(null)
+  const [loadingFor, setLoadingFor] = useState<LoadingFor>(null)
   const [animate, setAnimate]   = useState(false)
 
   // Charger les compteurs + vérifier le cache local
@@ -40,6 +42,7 @@ const PollSection: React.FC = () => {
   const castVote = async (candidate: 'lfi' | 'rn') => {
     if (voteState !== 'idle') return
     setVote('loading')
+    setLoadingFor(candidate)
     try {
       const res  = await fetch(API, {
         method:  'POST',
@@ -62,9 +65,14 @@ const PollSection: React.FC = () => {
         setTimeout(() => setAnimate(true), 100)
       } else {
         setVote('error')
+        setLoadingFor(null)
+        // Reset to idle after 4s so user can retry
+        setTimeout(() => setVote('idle'), 4000)
       }
     } catch {
       setVote('error')
+      setLoadingFor(null)
+      setTimeout(() => setVote('idle'), 4000)
     }
   }
 
@@ -125,7 +133,7 @@ const PollSection: React.FC = () => {
             </div>
             {!hasVoted && (
               <div className="w-full bg-lfi-red text-white font-heading text-xs font-semibold py-2 rounded-xl text-center tracking-wider group-hover:bg-lfi-red/90 transition-colors">
-                {voteState === 'loading' ? '…' : 'VOTER'}
+                {loadingFor === 'lfi' ? '…' : 'VOTER'}
               </div>
             )}
             {hasVoted && (
@@ -173,7 +181,7 @@ const PollSection: React.FC = () => {
             </div>
             {!hasVoted && (
               <div className="w-full bg-rn-blue text-white font-heading text-xs font-semibold py-2 rounded-xl text-center tracking-wider group-hover:bg-rn-blue/90 transition-colors">
-                {voteState === 'loading' ? '…' : 'VOTER'}
+                {loadingFor === 'rn' ? '…' : 'VOTER'}
               </div>
             )}
             {hasVoted && (
