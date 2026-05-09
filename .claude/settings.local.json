@@ -13,7 +13,29 @@
       "Bash(cd \"C:/Users/fnahn/Desktop/Melenchon2027vsLepen2027\" && rm public/images/candidates/*-opt.png && ls -la public/images/candidates/)",
       "Bash(netlify deploy *)",
       "Read(//c/Program Files/Google/Chrome/Application/**)",
-      "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)"
+      "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(gh repo *)",
+      "Bash(winget install *)",
+      "Bash(curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "mcp__Claude_in_Chrome__find",
+      "mcp__Claude_in_Chrome__read_page",
+      "mcp__Claude_in_Chrome__form_input",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "mcp__Claude_in_Chrome__computer",
+      "Bash(where gh *)",
+      "Bash(Get-Command gh *)",
+      "Bash(Select-Object -ExpandProperty Source)",
+      "PowerShell(Get-Command gh)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git rm *)",
+      "Bash(rm -f public/images/candidates/presidentiel2027.webp.tmp)"
     ]
   }
 }
