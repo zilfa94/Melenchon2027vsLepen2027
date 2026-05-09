@@ -1,0 +1,18 @@
+{
+  "name": "Duel 2027 — LFI vs RN",
+  "short_name": "Duel 2027",
+  "description": "Comparaison des programmes économiques LFI et RN pour la présidentielle 2027",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06080f",
+  "theme_color": "#06080f",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

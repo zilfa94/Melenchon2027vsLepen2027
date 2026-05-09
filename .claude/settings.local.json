@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "WebSearch",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(npx --yes lighthouse https://tangerine-chaja-996f5a.netlify.app --output json --quiet --chrome-flags=\"--headless --no-sandbox\")",
+      "Bash(npx --yes lighthouse https://tangerine-chaja-996f5a.netlify.app --output json --quiet --only-categories=performance,accessibility,best-practices,seo --chrome-flags=\"--headless --no-sandbox --disable-gpu\")",
+      "Bash(node -e ' *)",
+      "Bash(npx --yes lighthouse https://tangerine-chaja-996f5a.netlify.app --output json --quiet --only-categories=performance --chrome-flags=\"--headless --no-sandbox --disable-gpu\")",
+      "Bash(npm install *)",
+      "Bash(cd \"C:/Users/fnahn/Desktop/Melenchon2027vsLepen2027\" && rm public/images/candidates/*-opt.png && ls -la public/images/candidates/)",
+      "Bash(netlify deploy *)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files \\(x86\\)/Google/Chrome/Application/**)"
+    ]
+  }
+}

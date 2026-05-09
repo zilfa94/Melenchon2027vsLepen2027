@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Pas d'indexation des assets techniques
+Disallow: /assets/
+Disallow: /.netlify/
+
+Sitemap: https://tangerine-chaja-996f5a.netlify.app/sitemap.xml
