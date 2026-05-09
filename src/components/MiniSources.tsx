@@ -74,9 +74,18 @@ const MiniSources: React.FC = () => (
       </div>
 
       {/* Footer */}
-      <div className="mt-10 pt-5 border-t border-white/[0.05] text-center">
+      <div className="mt-10 pt-5 border-t border-white/[0.05] text-center space-y-2">
         <p className="font-body text-white/18 text-xs">
           Analyse data-journalisme — Programmes comparés sur la base des documents publics disponibles
+        </p>
+        <p className="font-body text-white/25 text-xs">
+          Contact :{' '}
+          <a
+            href="mailto:presidentiel.2027.fr@gmail.com"
+            className="text-gold/50 hover:text-gold/80 transition-colors underline underline-offset-2"
+          >
+            presidentiel.2027.fr@gmail.com
+          </a>
         </p>
       </div>
     </div>
