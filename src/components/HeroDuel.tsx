@@ -72,10 +72,7 @@ const HeroDuel: React.FC = () => {
         </p>
 
         {/* ── Main illustration ── */}
-        <div
-          className="w-full max-w-2xl animate-scale-in relative"
-          style={{ animationDelay: '0.4s' }}
-        >
+        <div className="w-full max-w-2xl relative">
           {/* Dual glow behind image */}
           <div className="absolute -inset-4 pointer-events-none" aria-hidden>
             <div className="absolute inset-0 rounded-3xl"
@@ -100,8 +97,9 @@ const HeroDuel: React.FC = () => {
                 alt="Duel caricatural Mélenchon (LFI) vs Marine Le Pen (RN) — Présidentiel 2027"
                 className="w-full h-auto block"
                 width="800" height="600"
+                loading="eager"
                 fetchPriority="high"
-                decoding="async"
+                decoding="sync"
               />
             </picture>
             {/* Subtle bottom fade to blend with page */}

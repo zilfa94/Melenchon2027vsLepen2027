@@ -24,6 +24,10 @@ const CandidateAvatar: React.FC<Props> = ({ candidate, size = 48, className = ''
           src={candidate.image}
           alt={`${candidate.name} — ${candidate.party}`}
           className="w-full h-full object-cover object-top"
+          width={size}
+          height={size}
+          loading="lazy"
+          decoding="async"
           onError={() => setError(true)}
         />
       ) : (
