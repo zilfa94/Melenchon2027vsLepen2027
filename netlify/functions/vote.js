@@ -9,7 +9,10 @@ const VALID_CANDIDATES = new Set(['lfi', 'rn'])
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function hashIP(ip) {
-  const salt = process.env.IP_SALT || 'duel2027-salt'
+  if (!process.env.IP_SALT) {
+    console.warn('[vote] IP_SALT env var is not set — using insecure fallback. Set it in Netlify environment variables.')
+  }
+  const salt = process.env.IP_SALT || 'duel2027-fallback-change-me'
   return crypto.createHash('sha256').update(salt + ip).digest('hex').slice(0, 40)
 }
 
