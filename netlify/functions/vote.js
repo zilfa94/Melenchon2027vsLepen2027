@@ -2,18 +2,27 @@ const crypto = require('crypto')
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const SITE_ORIGIN  = process.env.SITE_URL || 'https://tangerine-chaja-996f5a.netlify.app'
-const MAX_BODY_LEN = 256          // octets — interdit les corps géants
+const SITE_ORIGIN      = process.env.SITE_URL || 'https://tangerine-chaja-996f5a.netlify.app'
+const MAX_BODY_LEN     = 512
 const VALID_CANDIDATES = new Set(['lfi', 'rn'])
+const EMAIL_REGEX      = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function hashIP(ip) {
+function getSalt() {
   if (!process.env.IP_SALT) {
-    console.warn('[vote] IP_SALT env var is not set — using insecure fallback. Set it in Netlify environment variables.')
+    console.warn('[vote] IP_SALT env var is not set — using insecure fallback.')
   }
-  const salt = process.env.IP_SALT || 'duel2027-fallback-change-me'
-  return crypto.createHash('sha256').update(salt + ip).digest('hex').slice(0, 40)
+  return process.env.IP_SALT || 'duel2027-fallback-change-me'
+}
+
+function hashIP(ip) {
+  return crypto.createHash('sha256').update(getSalt() + 'ip:' + ip).digest('hex').slice(0, 40)
+}
+
+function hashEmail(email) {
+  // Normaliser l'email avant de hasher : minuscules, trim
+  return crypto.createHash('sha256').update(getSalt() + 'email:' + email.toLowerCase().trim()).digest('hex').slice(0, 40)
 }
 
 async function sb(path, options = {}) {
@@ -22,7 +31,7 @@ async function sb(path, options = {}) {
   if (!url || !key) throw new Error('Missing Supabase env vars')
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 8000)   // timeout 8 s
+  const timer = setTimeout(() => controller.abort(), 8000)
 
   try {
     const res = await fetch(`${url}/rest/v1${path}`, {
@@ -56,8 +65,14 @@ async function getCounts() {
   return { lfi: parseCount(lfiRes), rn: parseCount(rnRes) }
 }
 
+// Identifie quelle contrainte UNIQUE a été violée (ip_hash ou email_hash)
+function getDuplicateReason(supabaseError) {
+  const msg = (supabaseError?.message || '') + (supabaseError?.details || '')
+  if (msg.includes('email_hash')) return 'email'
+  return 'ip'
+}
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// On accepte les appels depuis le site officiel ET localhost en dev
 
 function getCorsHeaders(origin) {
   const allowed = [SITE_ORIGIN, 'http://localhost:5173', 'http://localhost:8888']
@@ -113,35 +128,66 @@ exports.handler = async (event) => {
     catch { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'JSON invalide' }) } }
 
     // 3. Valider le candidat
-    const { candidate } = body
+    const { candidate, email } = body
     if (typeof candidate !== 'string' || !VALID_CANDIDATES.has(candidate)) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Candidat invalide' }) }
     }
 
-    // 4. Extraire et hasher l'IP (jamais stockée en clair)
+    // 4. Valider l'email (requis)
+    if (typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Adresse email invalide' }) }
+    }
+
+    // 5. Hasher IP et email (jamais stockés en clair)
     const rawIP =
       event.headers['x-nf-client-connection-ip'] ||
       (event.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
       'unknown'
-    const ipHash = hashIP(rawIP)
+    const ipHash    = hashIP(rawIP)
+    const emailHash = hashEmail(email)
 
     try {
-      // 5. Insertion — la contrainte UNIQUE sur ip_hash bloque les doublons
-      const insert = await sb('/votes', {
-        method:  'POST',
-        headers: { Prefer: 'return=minimal' },
-        body:    JSON.stringify({ ip_hash: ipHash, candidate }),
-      })
-
-      // 409 = déjà voté
-      if (insert.status === 409) {
-        const prev      = await sb(`/votes?ip_hash=eq.${ipHash}&select=candidate`)
-        const votedFor  = prev.data?.[0]?.candidate || candidate
-        const counts    = await getCounts()
+      // 6. Vérifier si l'IP a déjà voté
+      const ipCheck = await sb(`/votes?ip_hash=eq.${ipHash}&select=candidate`)
+      if (ipCheck.data && ipCheck.data.length > 0) {
+        const votedFor = ipCheck.data[0].candidate
+        const counts   = await getCounts()
         return {
           statusCode: 409,
           headers: { ...CORS, 'Cache-Control': 'no-store' },
-          body: JSON.stringify({ error: 'already_voted', votedFor, ...counts }),
+          body: JSON.stringify({ error: 'already_voted', reason: 'ip', votedFor, ...counts }),
+        }
+      }
+
+      // 7. Vérifier si l'email a déjà voté
+      const emailCheck = await sb(`/votes?email_hash=eq.${emailHash}&select=candidate`)
+      if (emailCheck.data && emailCheck.data.length > 0) {
+        const votedFor = emailCheck.data[0].candidate
+        const counts   = await getCounts()
+        return {
+          statusCode: 409,
+          headers: { ...CORS, 'Cache-Control': 'no-store' },
+          body: JSON.stringify({ error: 'already_voted', reason: 'email', votedFor, ...counts }),
+        }
+      }
+
+      // 8. Insertion avec ip_hash ET email_hash
+      const insert = await sb('/votes', {
+        method:  'POST',
+        headers: { Prefer: 'return=minimal' },
+        body:    JSON.stringify({ ip_hash: ipHash, email_hash: emailHash, candidate }),
+      })
+
+      // 409 residuel (race condition très rare entre deux requêtes simultanées)
+      if (insert.status === 409) {
+        const reason   = getDuplicateReason(insert.data)
+        const prev     = await sb(`/votes?${reason === 'email' ? 'email_hash' : 'ip_hash'}=eq.${reason === 'email' ? emailHash : ipHash}&select=candidate`)
+        const votedFor = prev.data?.[0]?.candidate || candidate
+        const counts   = await getCounts()
+        return {
+          statusCode: 409,
+          headers: { ...CORS, 'Cache-Control': 'no-store' },
+          body: JSON.stringify({ error: 'already_voted', reason, votedFor, ...counts }),
         }
       }
 
@@ -158,7 +204,6 @@ exports.handler = async (event) => {
       }
 
     } catch (e) {
-      // Ne pas exposer les détails d'erreur internes
       console.error('[vote POST]', e.message)
       return { statusCode: 503, headers: CORS, body: JSON.stringify({ error: 'Service temporairement indisponible' }) }
     }
